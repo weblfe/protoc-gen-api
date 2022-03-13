@@ -1,14 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"testing"
+		"bytes"
+		"fmt"
+		core "github.com/weblfe/protoc-gen-api/pkg/app"
+		"io/ioutil"
+		"os"
+		"os/exec"
+		"path/filepath"
+		"strings"
+		"testing"
 )
 
 // When the environment variable RUN_AS_PROTOC_GEN_GO is set, we skip running
@@ -21,13 +22,10 @@ func init() {
 	}
 }
 
-func format(name string) string {
-	return fmt.Sprintf("%s-%s", GetName(), name)
-}
-
 func TestGolden(t *testing.T) {
 	str, _ := os.Getwd()
 	workdir := filepath.Join(str, "testdata")
+	flagOut:=`api_out`
 	// defer os.RemoveAll(workdir)
 
 	// Find all the proto files in testdata.
@@ -45,9 +43,9 @@ func TestGolden(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Compile each package, using this binary as protoc-gen-gohttp.
+	// Compile each package, using this binary as protoc-gen-api.
 	for _, sources := range packages {
-		args := []string{"-Itestdata", "--api_out=" + workdir}
+		args := []string{"-Itestdata", fmt.Sprintf("--%s=%s" ,flagOut, workdir)}
 		args = append(args, sources...)
 		protoc(t, args)
 	}
@@ -94,7 +92,7 @@ func TestGolden(t *testing.T) {
 }
 
 func protoc(t *testing.T, args []string) {
-	cmd := exec.Command("protoc", "--plugin=protoc-gen-api="+os.Args[0])
+	cmd := exec.Command("protoc", fmt.Sprintf("--plugin=%s=%s",core.GetName(),os.Args[0]))
 	cmd.Args = append(cmd.Args, args...)
 	// fmt.Println(cmd.String())
 	// We set the RUN_AS_PROTOC_GEN_GO environment variable to indicate that

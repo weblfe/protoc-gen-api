@@ -29,6 +29,3 @@ func init() {
 	app.Register(generators.NewApiGenerator())
 }
 
-func GetName() string {
-	return name
-}
