@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-		"fmt"
-		"io/ioutil"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,23 +22,21 @@ func init() {
 }
 
 func format(name string) string {
-		return fmt.Sprintf("%s-%s",GetName(),name)
+	return fmt.Sprintf("%s-%s", GetName(), name)
 }
 
 func TestGolden(t *testing.T) {
-	workdir, err := ioutil.TempDir(	`/Volumes/data/workpaces/coding/golang/src/github.com/weblfe/protoc-gen-api/`, format(`test`))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(workdir)
+	str, _ := os.Getwd()
+	workdir := filepath.Join(str, "testdata")
+	// defer os.RemoveAll(workdir)
 
 	// Find all the proto files in testdata.
 	packages := map[string][]string{}
 	if err := filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
-		if !strings.HasSuffix(path, ".proto") {
+		if !strings.HasSuffix(path, ".proto") || strings.Contains(path, "/google/") {
 			return nil
 		}
-
+		//fmt.Println(path)
 		dir := filepath.Dir(path)
 		packages[dir] = append(packages[dir], path)
 
@@ -98,12 +96,13 @@ func TestGolden(t *testing.T) {
 func protoc(t *testing.T, args []string) {
 	cmd := exec.Command("protoc", "--plugin=protoc-gen-api="+os.Args[0])
 	cmd.Args = append(cmd.Args, args...)
+	// fmt.Println(cmd.String())
 	// We set the RUN_AS_PROTOC_GEN_GO environment variable to indicate that
 	// the subprocess should act as a proto compiler rather than a test.
 	cmd.Env = append(os.Environ(), "RUN_AS_PROTOC_GEN_GO=1")
 	out, err := cmd.CombinedOutput()
 	if len(out) > 0 || err != nil {
-			t.Log("Error:",err)
+		t.Log("Error:", err)
 		t.Log("RUNNING: ", strings.Join(cmd.Args, " "))
 	}
 	if len(out) > 0 {
